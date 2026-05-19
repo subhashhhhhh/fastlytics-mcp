@@ -53,22 +53,58 @@ All tools are thin wrappers around existing worker API endpoints. The worker han
 - Edge caching
 - CORS
 
-## Tools
+## Tools (23 total)
 
+### Telemetry & Circuit
 | Tool | Worker Endpoint |
 |------|----------------|
 | `get_telemetry` | `/api/telemetry/{type}` |
 | `compare_telemetry` | `/api/telemetry/speed` + `/api/comparison/sectors` |
+| `get_circuit_info` | `/api/circuit/info` |
+
+### Sessions & Drivers
+| Tool | Worker Endpoint |
+|------|----------------|
 | `list_events` | `/api/schedule/{year}` |
 | `list_sessions` | `/api/sessions` |
 | `list_drivers` | `/api/session/drivers` |
+
+### Lap Analysis
+| Tool | Worker Endpoint |
+|------|----------------|
 | `get_laptimes` | `/api/laptimes` |
+| `get_laptimes_gaps` | `/api/laptimes/gaps` |
 | `get_lap_positions` | `/api/lapdata/positions` |
 | `get_strategy` | `/api/strategy` |
+| `get_stint_analysis` | `/api/stint-analysis` |
+
+### Results & Standings
+| Tool | Worker Endpoint |
+|------|----------------|
 | `get_race_results` | `/api/results/race/{year}/{event}` |
 | `get_standings` | `/api/standings/{drivers\|teams}` |
 | `get_championship_progression` | `/api/standings/progression` |
-| `get_circuit_info` | `/api/circuit/info` |
+
+### Race Context
+| Tool | Worker Endpoint |
+|------|----------------|
+| `get_race_control` | `/api/openf1/race_control` |
+| `get_incidents` | `/api/incidents` |
+
+### Team Performance
+| Tool | Worker Endpoint |
+|------|----------------|
+| `get_team_pace` | `/api/team-pace/{summary\|event\|session}` |
+
+### Driver/Team Bios & Stats
+| Tool | Worker Endpoint |
+|------|----------------|
+| `search_driver` | `/api/search` |
+| `get_driver_bio` | `/api/driver/{slug}/bio` |
+| `get_driver_career` | `/api/driver/{slug}/career` |
+| `get_team_bio` | `/api/team/{slug}/bio` |
+| `get_head_to_head` | `/api/bios/head-to-head` |
+| `get_leaderboard` | `/api/bios/leaderboard/{type}/{stat}` |
 
 ## Setup for Claude Desktop
 

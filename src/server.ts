@@ -5,12 +5,16 @@ import { registerLapTools } from './tools/laps.js';
 import { registerResultTools } from './tools/results.js';
 import { registerScheduleTools } from './tools/schedule.js';
 import { registerCircuitTools } from './tools/circuit.js';
+import { registerPaceTools } from './tools/pace.js';
+import { registerStintTools } from './tools/stints.js';
+import { registerRaceContextTools } from './tools/race_context.js';
+import { registerBiosTools } from './tools/bios.js';
 
 export function createMcpServer(): McpServer {
   const server = new McpServer(
     {
       name: 'fastlytics-mcp',
-      version: '1.0.0',
+      version: '1.1.0',
     },
     {
       instructions:
@@ -19,6 +23,10 @@ export function createMcpServer(): McpServer {
         'For telemetry analysis: call get_circuit_info first to get corner numbers, angles, and distances. ' +
         'Then fetch get_telemetry and correlate the distance-indexed trace with circuit corners to name turns and braking zones. ' +
         'If get_circuit_info returns empty corners (rare, e.g. Miami 2026), retry with year-1 — circuit layouts rarely change year-over-year. ' +
+        'For race analysis: combine get_race_results, get_laptimes, get_laptimes_gaps, get_stint_analysis, and get_race_control. ' +
+        'For driver/team stats: use search_driver to find slugs, then get_driver_bio, get_driver_career, get_head_to_head, get_leaderboard. ' +
+        'For team performance: use get_team_pace to compare pace across teams. ' +
+        'Use get_incidents for crash/incident details. ' +
         'Telemetry (speed, gear, throttle, brake, rpm, drs, steering) is available for 2018+ seasons. ' +
         'Historical results, schedules, and standings cover 1950-present via Supabase. ' +
         'Compare drivers with compare_telemetry for head-to-head speed trace overlays. ' +
@@ -32,6 +40,10 @@ export function createMcpServer(): McpServer {
   registerResultTools(server);
   registerScheduleTools(server);
   registerCircuitTools(server);
+  registerPaceTools(server);
+  registerStintTools(server);
+  registerRaceContextTools(server);
+  registerBiosTools(server);
 
   return server;
 }
