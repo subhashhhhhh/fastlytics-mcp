@@ -3,8 +3,8 @@
 ## Project Shape
 
 - Standalone MCP server for Fastlytics F1 data
-- Reads telemetry from R2 (S3-compatible), historical data from Supabase
-- Falls back to Python backend API when R2 cache misses
+- All data access goes through the worker API (`api.fastlytics.app`)
+- No direct R2 or Supabase access — purely an HTTP proxy layer with typed tool schemas
 - Two transports: stdio (local) and HTTP+SSE (remote)
 - TypeScript, ES modules, Node.js 22+
 
@@ -21,33 +21,82 @@
 Copy `.env.example` to `.env`.
 
 Required:
-- `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`
-- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+- `FASTLYTICS_MCP_API_KEY` — your API key from https://fastlytics.app/settings/api-keys
 
-Optional (for R2 cache miss fallback):
-- `BACKEND_API_URL`
-- `BACKEND_API_KEY`
+Optional:
+- `FASTLYTICS_API_URL` — worker API URL (default: `https://api.fastlytics.app`)
+- `TRANSPORT` — `stdio` (default) or `http`
+- `HTTP_PORT` — default `3456`
 
 ## Architecture
 
 ```
-MCP Client (Claude/Cursor) ──JSON-RPC──▶ McpServer
-                                          ├─ tools/telemetry.ts ──▶ R2 (S3) or Backend API
-                                          ├─ tools/sessions.ts  ──▶ R2 (S3)
-                                          ├─ tools/laps.ts      ──▶ R2 (S3) or Supabase
-                                          ├─ tools/results.ts   ──▶ R2 (S3) or Supabase
-                                          ├─ tools/schedule.ts  ──▶ R2 (S3) or Supabase
-                                          └─ tools/drivers.ts   ──▶ Supabase
+MCP Client (Claude/Cursor) ──JSON-RPC──▶ McpServer (this project)
+                                           │
+                                           │ HTTP + Authorization: Bearer <api_key>
+                                           ▼
+                                    Worker API (api.fastlytics.app)
+                                           │
+                              ┌────────────┼────────────┐
+                              ▼            ▼            ▼
+                            R2         Supabase     Python Backend
+                         (telemetry,  (historical,  (FastF1 processing,
+                          results,    1950-2017)    cache generation)
+                          charts)
+
 ```
 
-## R2 Key Patterns
+All tools are thin wrappers around existing worker API endpoints. The worker handles:
+- Auth validation (checks API key)
+- Data routing (R2 for modern, Supabase for historical)
+- Backend fallback for telemetry cache misses
+- Edge caching
+- CORS
 
-- Telemetry: `cache/{year}/telemetry/{event}_{session}_{driver}_{lap}_{type}.json.gz`
-- Charts: `cache/{year}/charts/{event}_{session}_{drivers}_{type}.json.gz`
-- Races: `cache/{year}/races/{event}_{session}.json.gz`
-- Schedule: `cache/{year}/schedule/season_schedule.json.gz`
-- Standings: `cache/{year}/standings/standings.json.gz`
+## Tools
 
-## Supabase Tables
+| Tool | Worker Endpoint |
+|------|----------------|
+| `get_telemetry` | `/api/telemetry/{type}` |
+| `compare_telemetry` | `/api/telemetry/speed` + `/api/comparison/sectors` |
+| `list_events` | `/api/schedule/{year}` |
+| `list_sessions` | `/api/sessions` |
+| `list_drivers` | `/api/session/drivers` |
+| `get_laptimes` | `/api/laptimes` |
+| `get_lap_positions` | `/api/lapdata/positions` |
+| `get_strategy` | `/api/strategy` |
+| `get_race_results` | `/api/results/race/{year}/{event}` |
+| `get_standings` | `/api/standings/{drivers\|teams}` |
+| `get_championship_progression` | `/api/standings/progression` |
 
-Historical data (1950-2017): `f1_seasons`, `f1_rounds`, `f1_circuits`, `f1_sessions`, `f1_session_entries`, `f1_round_entries`, `f1_team_drivers`, `f1_drivers`, `f1_teams`, `f1_laps`, `f1_pitstops`
+## Setup for Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "fastlytics": {
+      "command": "node",
+      "args": ["/path/to/fastlytics-mcp/dist/index.js"],
+      "env": {
+        "FASTLYTICS_MCP_API_KEY": "fl_mcp_..."
+      }
+    }
+  }
+}
+```
+
+## Setup for Cursor
+
+```json
+{
+  "mcpServers": {
+    "fastlytics": {
+      "command": "node",
+      "args": ["/path/to/fastlytics-mcp/dist/index.js"],
+      "env": {
+        "FASTLYTICS_MCP_API_KEY": "fl_mcp_..."
+      }
+    }
+  }
+}
+```
