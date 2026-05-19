@@ -9,12 +9,15 @@ import { registerPaceTools } from './tools/pace.js';
 import { registerStintTools } from './tools/stints.js';
 import { registerRaceContextTools } from './tools/race_context.js';
 import { registerBiosTools } from './tools/bios.js';
+import { registerWeatherTools } from './tools/weather.js';
+import { registerDriverTools } from './tools/drivers.js';
+import { registerAnalysisTools } from './tools/analysis.js';
 
 export function createMcpServer(): McpServer {
   const server = new McpServer(
     {
       name: 'fastlytics-mcp',
-      version: '1.1.0',
+      version: '1.1.1',
     },
     {
       instructions:
@@ -27,6 +30,9 @@ export function createMcpServer(): McpServer {
         'For driver/team stats: use search_driver to find slugs, then get_driver_bio, get_driver_career, get_head_to_head, get_leaderboard. ' +
         'For team performance: use get_team_pace to compare pace across teams. ' +
         'Use get_incidents for crash/incident details. ' +
+        'Use get_weather_forecast and get_weather for race weekend weather. ' +
+        'Use get_driver_championship and get_team_championship for season progression. ' +
+        'Use get_driver_teammates for teammate history. Use get_pace_distribution for driver consistency analysis. ' +
         'Telemetry (speed, gear, throttle, brake, rpm, drs, steering) is available for 2018+ seasons. ' +
         'Historical results, schedules, and standings cover 1950-present via Supabase. ' +
         'Compare drivers with compare_telemetry for head-to-head speed trace overlays. ' +
@@ -44,6 +50,9 @@ export function createMcpServer(): McpServer {
   registerStintTools(server);
   registerRaceContextTools(server);
   registerBiosTools(server);
+  registerWeatherTools(server);
+  registerDriverTools(server);
+  registerAnalysisTools(server);
 
   return server;
 }

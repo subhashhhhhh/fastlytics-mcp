@@ -53,7 +53,7 @@ All tools are thin wrappers around existing worker API endpoints. The worker han
 - Edge caching
 - CORS
 
-## Tools (23 total)
+## Tools (30 total)
 
 ### Telemetry & Circuit
 | Tool | Worker Endpoint |
@@ -61,6 +61,7 @@ All tools are thin wrappers around existing worker API endpoints. The worker han
 | `get_telemetry` | `/api/telemetry/{type}` |
 | `compare_telemetry` | `/api/telemetry/speed` + `/api/comparison/sectors` |
 | `get_circuit_info` | `/api/circuit/info` |
+| `get_pace_distribution` | `/api/telemetry/pace-distribution` |
 
 ### Sessions & Drivers
 | Tool | Worker Endpoint |
@@ -105,6 +106,19 @@ All tools are thin wrappers around existing worker API endpoints. The worker han
 | `get_team_bio` | `/api/team/{slug}/bio` |
 | `get_head_to_head` | `/api/bios/head-to-head` |
 | `get_leaderboard` | `/api/bios/leaderboard/{type}/{stat}` |
+
+### Weather
+| Tool | Worker Endpoint |
+|------|----------------|
+| `get_weather_forecast` | `/api/weather/forecast` |
+| `get_weather` | `/api/weather/{location}` |
+
+### Driver/Team History
+| Tool | Worker Endpoint |
+|------|----------------|
+| `get_driver_championship` | `/api/driver/{slug}/championship` |
+| `get_driver_teammates` | `/api/driver/{slug}/teammates` |
+| `get_team_championship` | `/api/team/{slug}/championship` |
 
 ## Setup for Claude Desktop
 
