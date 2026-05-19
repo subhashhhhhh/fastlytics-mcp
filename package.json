@@ -7,10 +7,30 @@
   "bin": {
     "fastlytics-mcp": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc",
-    "start:stdio": "node dist/index.js",
-    "start:http": "TRANSPORT=http node dist/index.js"
+    "build": "rm -rf dist && tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "f1",
+    "formula1",
+    "telemetry",
+    "mcp",
+    "model-context-protocol",
+    "fastlytics",
+    "racing",
+    "motorsport"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SubhashGottumukkala17/fastlytics"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.23.0",

@@ -1,9 +1,10 @@
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import express from 'express';
 import { createMcpServer } from '../server.js';
-import { HTTP_PORT } from '../lib/config.js';
+import { getConfig } from '../lib/config.js';
 
 export async function startHttp() {
+  const { HTTP_PORT } = getConfig();
   const app = express();
   app.use(express.json());
 

@@ -1,6 +1,8 @@
-import { FASTLYTICS_API_URL, FASTLYTICS_MCP_API_KEY } from './config.js';
+import { getApiKey, getConfig } from './config.js';
 
 export async function callWorkerApi<T>(path: string, params?: Record<string, string>): Promise<{ data: T | null; status: number; error?: string }> {
+  const { FASTLYTICS_API_URL } = getConfig();
+  const apiKey = getApiKey();
   const url = new URL(path, FASTLYTICS_API_URL);
   if (params) {
     for (const [key, value] of Object.entries(params)) {
@@ -11,7 +13,7 @@ export async function callWorkerApi<T>(path: string, params?: Record<string, str
   try {
     const resp = await fetch(url.toString(), {
       headers: {
-        Authorization: `Bearer ${FASTLYTICS_MCP_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
       },
     });
 
