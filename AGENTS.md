@@ -68,6 +68,7 @@ All tools are thin wrappers around existing worker API endpoints. The worker han
 | `get_race_results` | `/api/results/race/{year}/{event}` |
 | `get_standings` | `/api/standings/{drivers\|teams}` |
 | `get_championship_progression` | `/api/standings/progression` |
+| `get_circuit_info` | `/api/circuit/info` |
 
 ## Setup for Claude Desktop
 
@@ -100,3 +101,39 @@ All tools are thin wrappers around existing worker API endpoints. The worker han
   }
 }
 ```
+
+## Setup for Remote Clients (Perplexity, Claude Desktop remote, etc.)
+
+Connect to: `https://mcp.fastlytics.app/mcp`
+
+Pass your API key via `Authorization: Bearer fl_mcp_...` header.
+
+## Remote Deployment (VPS)
+
+The HTTP transport is deployed on the same VPS as the Fastlytics backend.
+
+### First-time setup
+
+```bash
+# On the VPS
+mkdir -p /opt/fastlytics-mcp
+cp deploy/fastlytics-mcp.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable fastlytics-mcp
+
+# Set up nginx (see deploy/nginx-mcp.conf)
+# Get SSL cert: certbot certonly -d mcp.fastlytics.app
+```
+
+### Subsequent deploys
+
+```bash
+./deploy/deploy.sh root@fastlytics
+```
+
+This builds locally, rsyncs `dist/` + `package.json`, installs deps, and restarts systemd.
+
+### Key flow (remote)
+
+Client sends `Authorization: Bearer fl_mcp_xxx` header → server extracts → sets `process.env` → `api-client.ts` uses it to call the worker. No env var needed on the server itself (the VPS env var is a fallback, not the primary source).
+

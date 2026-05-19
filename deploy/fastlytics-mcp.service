@@ -1,0 +1,19 @@
+[Unit]
+Description=Fastlytics MCP Server (Streamable HTTP)
+After=network.target
+
+[Service]
+Type=simple
+User=fastlytics
+WorkingDirectory=/opt/fastlytics-mcp
+ExecStart=/usr/bin/node /opt/fastlytics-mcp/dist/index.js
+Restart=always
+RestartSec=5
+Environment=TRANSPORT=http
+Environment=HTTP_PORT=3456
+Environment=FASTLYTICS_API_URL=https://api.fastlytics.app
+# Optional: set a default API key (overridden per-request by Authorization header)
+# Environment=FASTLYTICS_MCP_API_KEY=fl_mcp_...
+
+[Install]
+WantedBy=multi-user.target
