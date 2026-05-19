@@ -1,0 +1,29 @@
+{
+  "name": "fastlytics-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Fastlytics F1 telemetry and historical data",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "fastlytics-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start:stdio": "node dist/index.js",
+    "start:http": "TRANSPORT=http node dist/index.js",
+    "dev:stdio": "tsc --watch & sleep 2 && node dist/index.js",
+    "dev:http": "TRANSPORT=http tsc --watch & sleep 2 && node dist/index.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.787.0",
+    "@modelcontextprotocol/sdk": "^1.23.0",
+    "@supabase/supabase-js": "^2.49.1",
+    "express": "^5.1.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  }
+}
