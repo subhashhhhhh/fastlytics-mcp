@@ -73,6 +73,14 @@ const AGENTS: AgentConfig[] = [
     },
   },
   {
+    name: 'OpenCode',
+    id: 'opencode',
+    configPath: () => getHomeConfigPath('.config/opencode/opencode.jsonc'),
+    format: (name, key) => ({
+      mcp: { [name]: { type: 'local', command: ['npx', '-y', 'fastlytics-mcp'], enabled: true, environment: { FASTLYTICS_MCP_API_KEY: key } } },
+    }),
+  },
+  {
     name: 'Windsurf',
     id: 'windsurf',
     configPath: () => resolve('.windsurf', 'mcp.json'),
