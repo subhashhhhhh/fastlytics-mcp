@@ -10,8 +10,8 @@ ExecStart=/usr/bin/node /opt/fastlytics-mcp/dist/index.js
 Restart=always
 RestartSec=5
 Environment=TRANSPORT=http
-Environment=HTTP_PORT=3456
-Environment=FASTLYTICS_API_URL=https://api.fastlytics.app
+Environment=HTTP_PORT=48500
+Environment=FASTLYTICS_API_URL=https://fastlytics-api-proxy-v2.subhashgottumukkala17.workers.dev
 # Optional: set a default API key (overridden per-request by Authorization header)
 # Environment=FASTLYTICS_MCP_API_KEY=fl_mcp_...
 

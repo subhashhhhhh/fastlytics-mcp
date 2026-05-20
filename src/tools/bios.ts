@@ -137,7 +137,7 @@ export function registerBiosTools(server: McpServer) {
       }),
     },
     async ({ type, stat, limit, min_races }) => {
-      let path = `/api/bios/leaderboard/${type}/${stat}`;
+      const path = `/api/bios/leaderboard/${type}/${stat}`;
       const params: Record<string, string> = { limit: String(limit) };
       if (min_races) params.min_races = String(min_races);
 

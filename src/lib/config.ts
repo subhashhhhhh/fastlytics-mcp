@@ -6,7 +6,7 @@ export function getApiKey(): string {
 
 export function getConfig() {
   return {
-    FASTLYTICS_API_URL: process.env.FASTLYTICS_API_URL || 'https://dev-api.fastlytics.app',
+    FASTLYTICS_API_URL: process.env.FASTLYTICS_API_URL || 'https://fastlytics-api-proxy-v2.subhashgottumukkala17.workers.dev',
     TRANSPORT: process.env.TRANSPORT || 'stdio',
     HTTP_PORT: parseInt(process.env.HTTP_PORT || '3456', 10),
   };

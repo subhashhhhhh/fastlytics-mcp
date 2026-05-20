@@ -10,16 +10,18 @@ async function main() {
     return;
   }
 
-  // Missing API key → run setup wizard
-  if (!process.env.FASTLYTICS_MCP_API_KEY) {
+  const { getConfig } = await import('./lib/config.js');
+  const { TRANSPORT } = getConfig();
+
+  // Hosted HTTP mode accepts bearer keys per request, so only stdio/local
+  // startup requires a preconfigured API key.
+  if (TRANSPORT !== 'http' && !process.env.FASTLYTICS_MCP_API_KEY) {
     console.error('No FASTLYTICS_MCP_API_KEY found. Starting setup wizard...\n');
     await runSetup();
     return;
   }
 
   // Normal server startup
-  const { getConfig } = await import('./lib/config.js');
-  const { TRANSPORT } = getConfig();
   if (TRANSPORT === 'http') {
     const { startHttp } = await import('./transports/http.js');
     await startHttp();
