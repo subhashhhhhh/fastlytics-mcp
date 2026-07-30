@@ -1,5 +1,7 @@
+import { getRequestApiKey } from './request-context.js';
+
 export function getApiKey(): string {
-  const value = process.env.FASTLYTICS_MCP_API_KEY;
+  const value = getRequestApiKey() || process.env.FASTLYTICS_MCP_API_KEY;
   if (!value) throw new Error('Missing FASTLYTICS_MCP_API_KEY');
   return value;
 }

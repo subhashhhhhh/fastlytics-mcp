@@ -9,6 +9,10 @@ WorkingDirectory=/opt/fastlytics-mcp
 ExecStart=/usr/bin/node /opt/fastlytics-mcp/dist/index.js
 Restart=always
 RestartSec=5
+# Bound Node's V8 heap and the complete service to prevent a leak from exhausting the host.
+Environment=NODE_OPTIONS=--max-old-space-size=768
+MemoryHigh=768M
+MemoryMax=1G
 Environment=TRANSPORT=http
 Environment=HTTP_PORT=48500
 Environment=FASTLYTICS_API_URL=https://fastlytics-api-proxy-v2.subhashgottumukkala17.workers.dev

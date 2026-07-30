@@ -2,6 +2,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import express from 'express';
 import { createMcpServer } from '../server.js';
 import { getConfig } from '../lib/config.js';
+import { runWithApiKey } from '../lib/request-context.js';
 
 function setCorsHeaders(req: express.Request, res: express.Response) {
   const origin = req.headers.origin;
@@ -39,11 +40,50 @@ function extractApiKey(req: express.Request): string {
     return apiKeyHeader.trim();
   }
 
+  const requestUrl = req.originalUrl || req.url;
+  try {
+    const apiKeyParam = new URL(requestUrl, 'http://localhost').searchParams.get('api_key');
+    if (apiKeyParam?.trim()) {
+      return apiKeyParam.trim();
+    }
+  } catch {
+    // Ignore malformed URLs and continue to env fallback.
+  }
+
   return process.env.FASTLYTICS_MCP_API_KEY || '';
+}
+
+function ensureStreamableAccept(req: express.Request) {
+  const required = ['application/json', 'text/event-stream'];
+  const rawAccept = req.headers.accept;
+  const existing = typeof rawAccept === 'string' ? rawAccept : '';
+  const missing = required.filter(r => !existing.includes(r));
+  const patched = missing.length > 0 ? (existing ? existing + ', ' + missing.join(', ') : missing.join(', ')) : existing;
+
+  if (patched) {
+    req.headers.accept = patched;
+  }
+
+  const rawHeaders = req.rawHeaders;
+  if (Array.isArray(rawHeaders)) {
+    let found = false;
+    for (let i = 0; i < rawHeaders.length; i += 2) {
+      if (rawHeaders[i].toLowerCase() === 'accept') {
+        rawHeaders[i + 1] = patched || 'application/json, text/event-stream';
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      rawHeaders.push('Accept', patched || 'application/json, text/event-stream');
+    }
+  }
 }
 
 async function handleMcpRequest(req: express.Request, res: express.Response) {
   setCorsHeaders(req, res);
+
+  ensureStreamableAccept(req);
 
   const apiKey = extractApiKey(req);
 
@@ -52,23 +92,38 @@ async function handleMcpRequest(req: express.Request, res: express.Response) {
     return;
   }
 
-  const previousKey = process.env.FASTLYTICS_MCP_API_KEY;
-  process.env.FASTLYTICS_MCP_API_KEY = apiKey;
-
-  try {
+  await runWithApiKey(apiKey, async () => {
     const server = createMcpServer();
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });
-    res.on('close', () => {
-      transport.close();
-      process.env.FASTLYTICS_MCP_API_KEY = previousKey;
+    let cleanedUp = false;
+
+    const cleanup = async () => {
+      if (cleanedUp) return;
+      cleanedUp = true;
+      await transport.close();
+      await server.close();
+    };
+
+    res.once('close', () => {
+      void cleanup();
     });
-    await server.connect(transport);
-    await transport.handleRequest(req, res, req.body);
-  } catch {
-    process.env.FASTLYTICS_MCP_API_KEY = previousKey;
-  }
+    req.once('aborted', () => {
+      void cleanup();
+    });
+
+    try {
+      await server.connect(transport);
+      await transport.handleRequest(req, res, req.body);
+    } catch (error) {
+      await cleanup();
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Unable to process MCP request.' });
+      }
+      console.error('MCP request failed:', error);
+    }
+  });
 }
 
 export async function startHttp() {
