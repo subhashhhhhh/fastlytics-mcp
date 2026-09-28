@@ -26,7 +26,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/SubhashGottumukkala17/fastlytics"
+    "url": "https://github.com/subhashhhhhh/fastlytics-mcp"
+  },
+  "homepage": "https://fastlytics.app",
+  "bugs": {
+    "url": "https://github.com/subhashhhhhh/fastlytics-mcp/issues"
   },
   "license": "MIT",
   "engines": {

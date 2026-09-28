@@ -53,7 +53,7 @@ All tools are thin wrappers around existing worker API endpoints. The worker han
 - Edge caching
 - CORS
 
-## Tools (30 total)
+## Tools (29 total)
 
 ### Telemetry & Circuit
 | Tool | Worker Endpoint |
