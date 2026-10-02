@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerTelemetryTools } from './tools/telemetry.js';
 import { registerSessionTools } from './tools/sessions.js';
@@ -13,11 +14,27 @@ import { registerWeatherTools } from './tools/weather.js';
 import { registerDriverTools } from './tools/drivers.js';
 import { registerAnalysisTools } from './tools/analysis.js';
 
+/**
+ * Read the version from the nearest package.json so it can never drift from
+ * the published package version. Resolves correctly both when running from the
+ * repo (dist/../package.json) and when installed as a dependency
+ * (node_modules/fastlytics-mcp/package.json).
+ */
+function resolvePackageVersion(): string {
+  try {
+    const require = createRequire(import.meta.url);
+    const pkg = require('../package.json') as { version?: string };
+    return pkg.version ?? 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
 export function createMcpServer(): McpServer {
   const server = new McpServer(
     {
       name: 'fastlytics-mcp',
-      version: '1.1.1',
+      version: resolvePackageVersion(),
     },
     {
       instructions:

@@ -14,7 +14,7 @@ The server is a thin proxy. Every tool call becomes one authenticated HTTP reque
 MCP client (Claude, Cursor, OpenCode)
         │  JSON-RPC
         ▼
-  fastlytics-mcp  ──HTTP + Bearer──▶  Worker API (api.fastlytics.app)
+  fastlytics-mcp  ──HTTP + Bearer──▶  Worker API (workers.dev)
         │                                    │
         │                     ┌──────────────┼──────────────┐
         │                     ▼              ▼              ▼
@@ -97,7 +97,7 @@ Every tool maps to one worker API endpoint. The mapping lives in `AGENTS.md`.
 | Variable | Required | Default | Purpose |
 | --- | --- | --- | --- |
 | `FASTLYTICS_MCP_API_KEY` | stdio only | none | API key from fastlytics.app |
-| `FASTLYTICS_API_URL` | no | `https://api.fastlytics.app` | Worker API base URL |
+| `FASTLYTICS_API_URL` | no | `https://fastlytics-api-proxy-v2.subhashgottumukkala17.workers.dev` | Worker API base URL |
 | `TRANSPORT` | no | `stdio` | `stdio` or `http` |
 | `HTTP_PORT` | no | `3456` | Port for the HTTP transport |
 

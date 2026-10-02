@@ -3,7 +3,7 @@
 ## Project Shape
 
 - Standalone MCP server for Fastlytics F1 data
-- All data access goes through the worker API (`api.fastlytics.app`)
+- All data access goes through the worker API (`fastlytics-api-proxy-v2.subhashgottumukkala17.workers.dev`)
 - No direct R2 or Supabase access — purely an HTTP proxy layer with typed tool schemas
 - Two transports: stdio (local) and HTTP+SSE (remote)
 - TypeScript, ES modules, Node.js 22+
@@ -24,7 +24,7 @@ Required:
 - `FASTLYTICS_MCP_API_KEY` — your API key from https://fastlytics.app/settings/api-keys
 
 Optional:
-- `FASTLYTICS_API_URL` — worker API URL (default: `https://api.fastlytics.app`)
+- `FASTLYTICS_API_URL` — worker API URL (default: `https://fastlytics-api-proxy-v2.subhashgottumukkala17.workers.dev`)
 - `TRANSPORT` — `stdio` (default) or `http`
 - `HTTP_PORT` — default `3456`
 
@@ -35,7 +35,7 @@ MCP Client (Claude/Cursor) ──JSON-RPC──▶ McpServer (this project)
                                            │
                                            │ HTTP + Authorization: Bearer <api_key>
                                            ▼
-                                    Worker API (api.fastlytics.app)
+                                    Worker API (workers.dev)
                                            │
                               ┌────────────┼────────────┐
                               ▼            ▼            ▼
