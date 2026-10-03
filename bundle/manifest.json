@@ -1,0 +1,60 @@
+{
+  "manifest_version": "0.3",
+  "name": "fastlytics",
+  "display_name": "Fastlytics",
+  "version": "1.2.1",
+  "description": "F1 telemetry and historical data: 29 tools for lap analysis, strategy, results, standings, driver/team bios and weather.",
+  "long_description": "Query Formula 1 data directly from Claude Desktop.\n\nFastlytics exposes 29 tools covering telemetry traces (speed, throttle, brake, DRS, gear, steering) from 2018 onward, lap-time and stint analysis, race strategy, results and standings from 1950 onward, driver and team biographies, championship progression, and race weekend weather.\n\nTypical flow: list_events -> list_sessions -> list_drivers -> get_telemetry or get_laptimes -> get_race_results.\n\nRequires a Fastlytics API key, which you can create at https://fastlytics.app/settings/api-keys. The key is stored in your operating system keychain, never in a config file.",
+  "author": {
+    "name": "Fastlytics",
+    "url": "https://fastlytics.app"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/subhashhhhhh/fastlytics-mcp.git"
+  },
+  "homepage": "https://fastlytics.app",
+  "support": "https://github.com/subhashhhhhh/fastlytics-mcp/issues",
+  "license": "MIT",
+  "keywords": [
+    "formula1",
+    "f1",
+    "telemetry",
+    "motorsport",
+    "lap-times",
+    "strategy",
+    "standings"
+  ],
+  "privacy_policies": [
+    "https://fastlytics.app/privacy"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/dist/index.js"],
+      "env": {
+        "FASTLYTICS_MCP_API_KEY": "${user_config.api_key}",
+        "NODE_NO_WARNINGS": "1"
+      }
+    }
+  },
+  "tools_generated": true,
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=22"
+    }
+  },
+  "user_config": {
+    "api_key": {
+      "type": "string",
+      "title": "Fastlytics API Key",
+      "description": "Create a free key at https://fastlytics.app/settings/api-keys",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}

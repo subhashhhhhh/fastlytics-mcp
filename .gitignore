@@ -5,3 +5,6 @@ dist/
 .DS_Store
 
 
+
+# Built MCPB bundles (rebuild with ./bundle/build.sh)
+*.mcpb
