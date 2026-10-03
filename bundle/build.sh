@@ -30,6 +30,7 @@ echo "=== Staging bundle ==="
 mkdir -p "$STAGE/server"
 cp bundle/manifest.json "$STAGE/manifest.json"
 cp -r dist "$STAGE/server/dist"
+cp -r bundle/assets "$STAGE/assets"
 
 # Bundle only the runtime dependencies the stdio transport actually needs.
 # express is a transitive dep of @modelcontextprotocol/sdk, so it comes along
