@@ -139,7 +139,7 @@ export async function runSetup() {
   // Step 1: API key
   const apiKey = await ask(rl, '  Enter your Fastlytics API key: ');
   if (!apiKey || !apiKey.startsWith('fl_mcp_')) {
-    console.log('  Invalid API key. Keys start with "fl_mcp_". Get one at https://fastlytics.app/settings/api-keys\n');
+    console.log('  Invalid API key. Keys start with "fl_mcp_". Get one at https://fastlytics.app/settings?section=api-keys\n');
     rl.close();
     process.exit(1);
   }

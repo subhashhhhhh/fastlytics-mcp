@@ -48,7 +48,7 @@ The setup wizard detects installed clients and writes the right config block for
 }
 ```
 
-Get a key at [fastlytics.app/settings/api-keys](https://fastlytics.app/settings/api-keys).
+Get a key at [fastlytics.app/settings](https://fastlytics.app/settings?section=api-keys).
 
 ## Remote (hosted) server
 

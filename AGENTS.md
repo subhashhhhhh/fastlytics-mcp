@@ -21,7 +21,7 @@
 Copy `.env.example` to `.env`.
 
 Required:
-- `FASTLYTICS_MCP_API_KEY` — your API key from https://fastlytics.app/settings/api-keys
+- `FASTLYTICS_MCP_API_KEY` — your API key from https://fastlytics.app/settings?section=api-keys
 
 Optional:
 - `FASTLYTICS_API_URL` — worker API URL (default: `https://fastlytics-api-proxy-v2.subhashgottumukkala17.workers.dev`)
