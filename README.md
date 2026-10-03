@@ -118,6 +118,30 @@ Build artifacts are rsynced to the host and run under systemd, with nginx termin
 ./deploy/deploy.sh user@host
 ```
 
+## Privacy Policy
+
+Full policy: https://fastlytics.app/privacy
+
+This server is a thin proxy. Every tool call is an authenticated HTTPS request from your machine
+to the Fastlytics API; no F1 data is stored on your machine, and the server holds no database,
+object storage, or payment access.
+
+**Data collected.** Your API key is sent as a bearer token to authenticate each request. Query
+parameters you pass to a tool (season, event, session, driver codes) are sent to the API to service
+that request.
+
+**Usage and storage.** The server is stateless. It performs no logging of queries or results to
+disk. The hosted API at `mcp.fastlytics.app` records request counts against your account's rate
+limit, which is how usage such as "0/3000" is reported.
+
+**Third-party sharing.** Requests are sent only to the Fastlytics API. The server does not send
+data to any other service or third party.
+
+**Data retention.** Nothing is retained by this server. Retention for data held by the Fastlytics
+API and its underlying storage is described in the privacy policy above.
+
+**Contact.** https://fastlytics.app for support.
+
 ## License
 
 MIT

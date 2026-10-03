@@ -30,8 +30,87 @@ export function resolvePackageVersion(): string {
   }
 }
 
+/**
+ * Human-readable titles for each tool, plus annotations.
+ *
+ * Anthropic's Connectors Directory requires every tool to declare a `title`
+ * and a `readOnlyHint`/`destructiveHint` annotation. All Fastlytics tools are
+ * GET-only reads against the worker API (no POST/PUT/PATCH/DELETE exists in
+ * this codebase), so every tool is annotated read-only.
+ */
+const TOOL_TITLES: Record<string, string> = {
+  // Telemetry & circuit
+  get_telemetry: 'Get telemetry trace',
+  compare_telemetry: 'Compare two telemetry traces',
+  get_circuit_info: 'Get circuit layout and corners',
+  get_pace_distribution: 'Get pace distribution',
+  // Sessions & drivers
+  list_events: 'List season events',
+  list_sessions: 'List sessions for an event',
+  list_drivers: 'List drivers in a session',
+  search_driver: 'Search drivers and teams',
+  // Lap analysis & strategy
+  get_laptimes: 'Get lap times',
+  get_laptimes_gaps: 'Get lap time gaps',
+  get_lap_positions: 'Get lap-by-lap positions',
+  get_strategy: 'Get race strategy',
+  get_stint_analysis: 'Get stint analysis',
+  // Results & standings
+  get_race_results: 'Get race or session results',
+  get_standings: 'Get championship standings',
+  get_championship_progression: 'Get championship progression',
+  // Race context
+  get_race_control: 'Get race control messages',
+  get_incidents: 'Get incidents',
+  // Team performance
+  get_team_pace: 'Get team pace comparison',
+  // Bios & history
+  get_driver_bio: 'Get driver biography',
+  get_driver_career: 'Get driver career history',
+  get_driver_championship: 'Get driver championship seasons',
+  get_driver_teammates: 'Get driver teammates by year',
+  get_team_bio: 'Get team biography',
+  get_team_championship: 'Get team championship seasons',
+  get_head_to_head: 'Compare two drivers head to head',
+  get_leaderboard: 'Get driver or team leaderboard',
+  // Weather
+  get_weather: 'Get circuit weather',
+  get_weather_forecast: 'Get weather forecast',
+};
+
+/**
+ * Wrap registerTool so every tool automatically gets its display title and
+ * read-only annotation. Doing this in one place keeps the 29 registration
+ * sites unchanged and makes it impossible for a new tool to ship unannotated.
+ */
+function withAnnotations(server: McpServer): McpServer {
+  const original = server.registerTool.bind(server);
+
+  server.registerTool = ((
+    name: string,
+    config: Record<string, unknown>,
+    cb: (args: Record<string, unknown>) => unknown,
+  ) =>
+    original(
+      name,
+      {
+        ...config,
+        annotations: {
+          title: TOOL_TITLES[name] ?? name,
+          readOnlyHint: true,
+          destructiveHint: false,
+          openWorldHint: true,
+        },
+      } as never,
+      cb as never,
+    )) as typeof server.registerTool;
+
+  return server;
+}
+
 export function createMcpServer(): McpServer {
-  const server = new McpServer(
+  const server = withAnnotations(
+    new McpServer(
     {
       name: 'fastlytics-mcp',
       version: resolvePackageVersion(),
@@ -53,8 +132,9 @@ export function createMcpServer(): McpServer {
         'Telemetry (speed, gear, throttle, brake, rpm, drs, steering) is available for 2018+ seasons. ' +
         'Historical results, schedules, and standings cover 1950-present via Supabase. ' +
         'Compare drivers with compare_telemetry for head-to-head speed trace overlays. ' +
-        'Requires a Fastlytics API key — get one from https://fastlytics.app/settings.',
+        'Requires a Fastlytics API key — get one from https://fastlytics.app/settings?section=api-keys.',
     },
+    ),
   );
 
   registerTelemetryTools(server);
