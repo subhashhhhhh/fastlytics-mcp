@@ -30,7 +30,7 @@ export function registerBiosTools(server: McpServer) {
       const { data, error } = await callWorkerApi('/api/search', { q: query });
 
       if (error || !data) {
-        return { content: [{ type: 'text', text: `No results for "${query}": ${error}` }] };
+        return { content: [{ type: 'text', text: `No results for "${query}": ${error}` }], isError: true };
       }
       return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
     },

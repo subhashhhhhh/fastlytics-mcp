@@ -20,7 +20,7 @@ import { registerAnalysisTools } from './tools/analysis.js';
  * repo (dist/../package.json) and when installed as a dependency
  * (node_modules/fastlytics-mcp/package.json).
  */
-function resolvePackageVersion(): string {
+export function resolvePackageVersion(): string {
   try {
     const require = createRequire(import.meta.url);
     const pkg = require('../package.json') as { version?: string };
