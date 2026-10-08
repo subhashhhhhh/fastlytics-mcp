@@ -1,0 +1,36 @@
+{
+  "name": "fastlytics",
+  "displayName": "Fastlytics",
+  "version": "1.2.2",
+  "description": "F1 telemetry and historical data: 29 tools for lap analysis, strategy, results, standings, driver/team bios and weather.",
+  "author": {
+    "name": "Fastlytics",
+    "url": "https://fastlytics.app"
+  },
+  "homepage": "https://fastlytics.app",
+  "repository": "https://github.com/subhashhhhhh/fastlytics-mcp",
+  "license": "MIT",
+  "keywords": ["formula1", "f1", "telemetry", "motorsport", "lap-times", "strategy", "standings"],
+  "supportUrl": "https://github.com/subhashhhhhh/fastlytics-mcp/issues",
+  "privacyPolicyUrl": "https://fastlytics.app/privacy",
+  "userConfig": {
+    "api_key": {
+      "type": "string",
+      "title": "Fastlytics API Key",
+      "description": "Create a free key at https://fastlytics.app/settings?section=api-keys",
+      "sensitive": true,
+      "required": true
+    }
+  },
+  "mcpServers": {
+    "fastlytics": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "fastlytics-mcp@1.2.2"],
+      "env": {
+        "FASTLYTICS_MCP_API_KEY": "${user_config.api_key}",
+        "NODE_NO_WARNINGS": "1"
+      }
+    }
+  }
+}
