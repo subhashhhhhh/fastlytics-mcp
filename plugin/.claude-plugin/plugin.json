@@ -1,7 +1,7 @@
 {
   "name": "fastlytics",
   "displayName": "Fastlytics",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "F1 telemetry and historical data: 29 tools for lap analysis, strategy, results, standings, driver/team bios and weather.",
   "author": {
     "name": "Fastlytics",
