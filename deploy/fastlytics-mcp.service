@@ -13,6 +13,9 @@ RestartSec=5
 Environment=NODE_OPTIONS=--max-old-space-size=768
 MemoryHigh=768M
 MemoryMax=1G
+# Secrets (SUPABASE_JWT_SECRET for verifying HS256-signed OAuth tokens) live
+# outside the repo, readable by root only (systemd reads it before dropping privileges).
+EnvironmentFile=-/etc/fastlytics-mcp.env
 Environment=TRANSPORT=http
 Environment=HTTP_PORT=48500
 Environment=FASTLYTICS_API_URL=https://fastlytics-api-proxy-v2.subhashgottumukkala17.workers.dev

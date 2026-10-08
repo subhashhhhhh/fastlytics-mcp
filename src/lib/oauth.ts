@@ -41,6 +41,24 @@ export function protectedResourceMetadata() {
 }
 
 /**
+ * Supabase signs with whichever key is "in use": the legacy HS256 secret (this
+ * project, as of 2026-10) or an asymmetric key published in the JWKS. Try the
+ * shared secret when configured, then the JWKS.
+ */
+async function verifySupabaseJwt(token: string) {
+  const options = { issuer: issuer(), audience: 'authenticated' };
+  const secret = process.env.SUPABASE_JWT_SECRET;
+  if (secret) {
+    try {
+      return await jwtVerify(token, new TextEncoder().encode(secret), options);
+    } catch {
+      // Fall through to the JWKS (asymmetric signing keys).
+    }
+  }
+  return jwtVerify(token, getJwks(), options);
+}
+
+/**
  * Accept only tokens minted by the Supabase OAuth server: same issuer and
  * audience as a normal session token, plus the client_id claim that Supabase
  * adds to OAuth-issued tokens. Plain browser session tokens are rejected so a
@@ -48,10 +66,7 @@ export function protectedResourceMetadata() {
  */
 export async function verifyOAuthAccessToken(token: string): Promise<{ userId: string; clientId: string } | null> {
   try {
-    const { payload } = await jwtVerify(token, getJwks(), {
-      issuer: issuer(),
-      audience: 'authenticated',
-    });
+    const { payload } = await verifySupabaseJwt(token);
     const clientId = payload.client_id;
     if (typeof clientId !== 'string' || !clientId || typeof payload.sub !== 'string') {
       return null;
