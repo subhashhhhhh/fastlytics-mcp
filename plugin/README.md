@@ -1,7 +1,7 @@
-# Fastlytics plugin for Claude Code
+# Fastlytics plugin for Claude
 
-Adds the [Fastlytics](https://fastlytics.app) MCP server to Claude Code and Cowork: 29 tools for Formula 1 telemetry (2018 onward), lap-time and stint analysis, race strategy, results and standings (1950 onward), driver and team bios, and race weekend weather.
+Adds the [Fastlytics](https://fastlytics.app) MCP server to Claude Code, Cowork and Claude chat: 29 read-only tools for Formula 1 telemetry (2018 onward), lap-time and stint analysis, race strategy, results and standings (1950 onward), driver and team bios, and race weekend weather. It also adds an `f1-analysis` skill that teaches Claude which tool answers which question.
 
-On install you are asked for a Fastlytics API key, which is stored as a sensitive value. Create a free key at [fastlytics.app/settings](https://fastlytics.app/settings?section=api-keys).
+The plugin connects to the hosted server at `https://mcp.fastlytics.app/mcp`. The first time a tool runs, Claude asks you to sign in with your Fastlytics account and approve access; no API key is needed. You can revoke access at any time from your Fastlytics account. Calls count toward your plan's monthly MCP quota.
 
-The server runs locally as `fastlytics-mcp@1.2.2`, pinned with `package-lock.json` in this folder. Every tool call is one authenticated HTTPS request to the Fastlytics API; the key is sent only there. Source and full tool list: [the repository README](https://github.com/subhashhhhhh/fastlytics-mcp#readme). Privacy policy: [fastlytics.app/privacy-policy](https://fastlytics.app/privacy-policy).
+Source and full tool list: [the repository README](https://github.com/subhashhhhhh/fastlytics-mcp#readme). Privacy policy: [fastlytics.app/privacy-policy](https://fastlytics.app/privacy-policy).

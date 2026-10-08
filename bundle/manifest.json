@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "fastlytics",
   "display_name": "Fastlytics",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "F1 telemetry and historical data: 29 tools for lap analysis, strategy, results, standings, driver/team bios and weather.",
   "long_description": "Query Formula 1 data directly from Claude Desktop.\n\nFastlytics exposes 29 tools covering telemetry traces (speed, throttle, brake, DRS, gear, steering) from 2018 onward, lap-time and stint analysis, race strategy, results and standings from 1950 onward, driver and team biographies, championship progression, and race weekend weather.\n\nTypical flow: list_events -> list_sessions -> list_drivers -> get_telemetry or get_laptimes -> get_race_results.\n\nRequires a Fastlytics API key, which you can create at https://fastlytics.app/settings?section=api-keys. The key is stored in your operating system keychain, never in a config file.",
   "author": {

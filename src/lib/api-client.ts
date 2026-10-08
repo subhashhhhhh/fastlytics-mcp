@@ -33,7 +33,7 @@ export async function callWorkerApi<T>(path: string, params?: Record<string, str
 
     if (resp.status === 401) {
       const detail = await readErrorDetail(resp);
-      return { data: null, status: 401, error: `Invalid or expired API key. Check your FASTLYTICS_MCP_API_KEY.${detail ? ` ${detail}` : ''}` };
+      return { data: null, status: 401, error: `Invalid or expired credentials. Check your FASTLYTICS_MCP_API_KEY, or reconnect to sign in again.${detail ? ` ${detail}` : ''}` };
     }
     if (resp.status === 403) {
       const detail = await readErrorDetail(resp);

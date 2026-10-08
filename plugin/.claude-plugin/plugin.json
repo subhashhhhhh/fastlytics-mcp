@@ -1,7 +1,7 @@
 {
   "name": "fastlytics",
   "displayName": "Fastlytics",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "F1 telemetry and historical data: 29 tools for lap analysis, strategy, results, standings, driver/team bios and weather.",
   "author": {
     "name": "Fastlytics",
@@ -22,27 +22,10 @@
   "icon": ".claude-plugin/icon.png",
   "supportUrl": "https://github.com/subhashhhhhh/fastlytics-mcp/issues",
   "privacyPolicyUrl": "https://fastlytics.app/privacy-policy",
-  "userConfig": {
-    "api_key": {
-      "type": "string",
-      "title": "Fastlytics API Key",
-      "description": "Create a free key at https://fastlytics.app/settings?section=api-keys",
-      "sensitive": true,
-      "required": true
-    }
-  },
   "mcpServers": {
     "fastlytics": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "fastlytics-mcp@1.2.2"
-      ],
-      "env": {
-        "FASTLYTICS_MCP_API_KEY": "${user_config.api_key}",
-        "NODE_NO_WARNINGS": "1"
-      }
+      "type": "http",
+      "url": "https://mcp.fastlytics.app/mcp"
     }
   }
 }

@@ -56,7 +56,9 @@ Get a key at [fastlytics.app/settings](https://fastlytics.app/settings?section=a
 https://mcp.fastlytics.app/mcp
 ```
 
-Pass the key per request:
+OAuth clients (Claude chat, Cowork, Claude Code) need no key: an unauthenticated request gets a 401 pointing at `/.well-known/oauth-protected-resource/mcp`, which names the Fastlytics Supabase project as the authorization server. The client registers itself, the user signs in and approves access at `fastlytics.app/oauth/consent`, and the Supabase access token is forwarded to the worker, which applies the same monthly MCP quota as API keys.
+
+Other clients can pass an API key per request:
 
 ```
 Authorization: Bearer fl_mcp_...

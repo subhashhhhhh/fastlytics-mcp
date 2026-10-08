@@ -3,6 +3,7 @@ import express from 'express';
 import { createMcpServer } from '../server.js';
 import { getConfig } from '../lib/config.js';
 import { runWithApiKey } from '../lib/request-context.js';
+import { protectedResourceMetadata, resourceMetadataUrl, verifyOAuthAccessToken } from '../lib/oauth.js';
 
 function setCorsHeaders(req: express.Request, res: express.Response) {
   const origin = req.headers.origin;
@@ -16,7 +17,7 @@ function setCorsHeaders(req: express.Request, res: express.Response) {
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, X-API-Key, Api-Key, Content-Type, Accept, Mcp-Session-Id');
-  res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id');
+  res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id, WWW-Authenticate');
 }
 
 function extractApiKey(req: express.Request): string {
@@ -47,10 +48,26 @@ function extractApiKey(req: express.Request): string {
       return apiKeyParam.trim();
     }
   } catch {
-    // Ignore malformed URLs and continue to env fallback.
+    // Ignore malformed URLs.
   }
 
-  return process.env.FASTLYTICS_MCP_API_KEY || '';
+  // No env fallback here: a server-wide key would answer unauthenticated
+  // requests and stop OAuth clients from ever seeing the 401 that starts sign-in.
+  return '';
+}
+
+/**
+ * 401 that tells an OAuth client (Claude) where to discover the authorization
+ * server. Claude only reads WWW-Authenticate on a 401.
+ */
+function sendUnauthorized(res: express.Response, error?: 'invalid_token') {
+  const params = [`resource_metadata="${resourceMetadataUrl()}"`];
+  if (error) params.unshift(`error="${error}"`);
+  res.setHeader('WWW-Authenticate', `Bearer ${params.join(', ')}`);
+  res.status(401).json({
+    error: error ?? 'unauthorized',
+    error_description: 'Sign in with OAuth, or pass Authorization: Bearer fl_mcp_...',
+  });
 }
 
 function ensureStreamableAccept(req: express.Request) {
@@ -87,8 +104,15 @@ async function handleMcpRequest(req: express.Request, res: express.Response) {
 
   const apiKey = extractApiKey(req);
 
-  if (!apiKey || !apiKey.startsWith('fl_mcp_')) {
-    res.status(401).json({ error: 'Missing or invalid API key. Pass Authorization: Bearer fl_mcp_...' });
+  if (!apiKey) {
+    sendUnauthorized(res);
+    return;
+  }
+
+  // fl_mcp_ keys are checked by the worker. Anything else must be a Supabase
+  // OAuth access token, verified here and forwarded to the worker as-is.
+  if (!apiKey.startsWith('fl_mcp_') && !(await verifyOAuthAccessToken(apiKey))) {
+    sendUnauthorized(res, 'invalid_token');
     return;
   }
 
@@ -130,6 +154,13 @@ export async function startHttp() {
   const { HTTP_PORT } = getConfig();
   const app = express();
   app.use(express.json());
+
+  const sendResourceMetadata = (req: express.Request, res: express.Response) => {
+    setCorsHeaders(req, res);
+    res.json(protectedResourceMetadata());
+  };
+  app.get('/.well-known/oauth-protected-resource/mcp', sendResourceMetadata);
+  app.get('/.well-known/oauth-protected-resource', sendResourceMetadata);
 
   app.options('/mcp', (req, res) => {
     setCorsHeaders(req, res);
