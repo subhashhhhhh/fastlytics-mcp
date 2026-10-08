@@ -120,7 +120,7 @@ Build artifacts are rsynced to the host and run under systemd, with nginx termin
 
 ## Privacy Policy
 
-Full policy: https://fastlytics.app/privacy
+Full policy: https://fastlytics.app/privacy-policy
 
 This server is a thin proxy. Every tool call is an authenticated HTTPS request from your machine
 to the Fastlytics API; no F1 data is stored on your machine, and the server holds no database,
