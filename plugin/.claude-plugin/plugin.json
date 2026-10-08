@@ -21,7 +21,7 @@
   ],
   "icon": ".claude-plugin/icon.png",
   "supportUrl": "https://github.com/subhashhhhhh/fastlytics-mcp/issues",
-  "privacyPolicyUrl": "https://fastlytics.app/privacy",
+  "privacyPolicyUrl": "https://fastlytics.app/privacy-policy",
   "userConfig": {
     "api_key": {
       "type": "string",
