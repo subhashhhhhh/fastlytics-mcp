@@ -1,0 +1,9 @@
+{
+  "name": "fastlytics-plugin",
+  "private": true,
+  "description": "Claude Code plugin wrapper that pins the fastlytics-mcp server",
+  "license": "MIT",
+  "dependencies": {
+    "fastlytics-mcp": "1.2.2"
+  }
+}

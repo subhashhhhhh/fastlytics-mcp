@@ -10,7 +10,16 @@
   "homepage": "https://fastlytics.app",
   "repository": "https://github.com/subhashhhhhh/fastlytics-mcp",
   "license": "MIT",
-  "keywords": ["formula1", "f1", "telemetry", "motorsport", "lap-times", "strategy", "standings"],
+  "keywords": [
+    "formula1",
+    "f1",
+    "telemetry",
+    "motorsport",
+    "lap-times",
+    "strategy",
+    "standings"
+  ],
+  "icon": ".claude-plugin/icon.png",
   "supportUrl": "https://github.com/subhashhhhhh/fastlytics-mcp/issues",
   "privacyPolicyUrl": "https://fastlytics.app/privacy",
   "userConfig": {
@@ -26,7 +35,10 @@
     "fastlytics": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "fastlytics-mcp@1.2.2"],
+      "args": [
+        "-y",
+        "fastlytics-mcp@1.2.2"
+      ],
       "env": {
         "FASTLYTICS_MCP_API_KEY": "${user_config.api_key}",
         "NODE_NO_WARNINGS": "1"
