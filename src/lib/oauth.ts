@@ -41,21 +41,12 @@ export function protectedResourceMetadata() {
 }
 
 /**
- * Supabase signs with whichever key is "in use": the legacy HS256 secret (this
- * project, as of 2026-10) or an asymmetric key published in the JWKS. Try the
- * shared secret when configured, then the JWKS.
+ * Supabase signs with the asymmetric (ES256) key published in its JWKS. The
+ * legacy HS256 shared secret was revoked on 2026-10-08, so it is deliberately
+ * not accepted here: anyone still holding it must not be able to mint tokens.
  */
 async function verifySupabaseJwt(token: string) {
-  const options = { issuer: issuer(), audience: 'authenticated' };
-  const secret = process.env.SUPABASE_JWT_SECRET;
-  if (secret) {
-    try {
-      return await jwtVerify(token, new TextEncoder().encode(secret), options);
-    } catch {
-      // Fall through to the JWKS (asymmetric signing keys).
-    }
-  }
-  return jwtVerify(token, getJwks(), options);
+  return jwtVerify(token, getJwks(), { issuer: issuer(), audience: 'authenticated' });
 }
 
 /**
