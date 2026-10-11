@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { callWorkerApi } from '../lib/api-client.js';
+import { slugSegment } from '../lib/path.js';
 import { normalizeCacheSlug, normalizeSessionParam } from '../lib/cache-keys.js';
 
 export function registerResultTools(server: McpServer) {
@@ -20,7 +21,7 @@ export function registerResultTools(server: McpServer) {
       const eventSlug = normalizeCacheSlug(event);
       const sessionUpper = normalizeSessionParam(session).toUpperCase();
 
-      const { data, error } = await callWorkerApi(`/api/results/race/${year}/${eventSlug}`, {
+      const { data, error } = await callWorkerApi(`/api/results/race/${year}/${slugSegment(eventSlug, 'event')}`, {
         session: sessionUpper,
         event_slug: eventSlug,
       });

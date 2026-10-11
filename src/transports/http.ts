@@ -3,6 +3,7 @@ import express from 'express';
 import { createMcpServer } from '../server.js';
 import { getConfig } from '../lib/config.js';
 import { runWithApiKey } from '../lib/request-context.js';
+import { checkApiKey } from '../lib/key-check.js';
 import { protectedResourceMetadata, resourceMetadataUrl, verifyOAuthAccessToken } from '../lib/oauth.js';
 
 function setCorsHeaders(req: express.Request, res: express.Response) {
@@ -15,7 +16,7 @@ function setCorsHeaders(req: express.Request, res: express.Response) {
     res.setHeader('Access-Control-Allow-Origin', '*');
   }
 
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, X-API-Key, Api-Key, Content-Type, Accept, Mcp-Session-Id');
   res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id, WWW-Authenticate');
 }
@@ -41,15 +42,8 @@ function extractApiKey(req: express.Request): string {
     return apiKeyHeader.trim();
   }
 
-  const requestUrl = req.originalUrl || req.url;
-  try {
-    const apiKeyParam = new URL(requestUrl, 'http://localhost').searchParams.get('api_key');
-    if (apiKeyParam?.trim()) {
-      return apiKeyParam.trim();
-    }
-  } catch {
-    // Ignore malformed URLs.
-  }
+  // No ?api_key= query parameter: a key in the URL ends up in Cloudflare, tunnel
+  // and proxy access logs and in Referer headers.
 
   // No env fallback here: a server-wide key would answer unauthenticated
   // requests and stop OAuth clients from ever seeing the 401 that starts sign-in.
@@ -97,6 +91,57 @@ function ensureStreamableAccept(req: express.Request) {
   }
 }
 
+const MAX_CONCURRENT_PER_IP = 20;
+const MAX_REQUESTS_PER_MINUTE = 120;
+const clients = new Map<string, { open: number; windowStart: number; count: number }>();
+
+/**
+ * Behind cloudflared every request arrives from loopback, so the visitor's address
+ * is CF-Connecting-IP; that header is only trusted on loopback connections, where
+ * nobody but the tunnel can set it.
+ */
+function clientIp(req: express.Request): string {
+  const socketIp = req.socket.remoteAddress || 'unknown';
+  const loopback = socketIp === '127.0.0.1' || socketIp === '::1' || socketIp === '::ffff:127.0.0.1';
+  const forwarded = req.headers['cf-connecting-ip'];
+  return loopback && typeof forwarded === 'string' && forwarded ? forwarded : socketIp;
+}
+
+function rateLimit(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const ip = clientIp(req);
+  const now = Date.now();
+  let entry = clients.get(ip);
+  if (!entry) {
+    entry = { open: 0, windowStart: now, count: 0 };
+    clients.set(ip, entry);
+  }
+  if (now - entry.windowStart >= 60_000) {
+    entry.windowStart = now;
+    entry.count = 0;
+  }
+  if (entry.count >= MAX_REQUESTS_PER_MINUTE || entry.open >= MAX_CONCURRENT_PER_IP) {
+    setCorsHeaders(req, res);
+    res.setHeader('Retry-After', '60');
+    res.status(429).json({ error: 'Too many requests. Slow down and retry shortly.' });
+    return;
+  }
+  entry.count += 1;
+  entry.open += 1;
+  const tracked = entry;
+  res.once('close', () => {
+    tracked.open -= 1;
+  });
+  next();
+}
+
+// Drop idle entries so the map can't grow without bound.
+setInterval(() => {
+  const cutoff = Date.now() - 120_000;
+  for (const [ip, entry] of clients) {
+    if (entry.open === 0 && entry.windowStart < cutoff) clients.delete(ip);
+  }
+}, 60_000).unref();
+
 async function handleMcpRequest(req: express.Request, res: express.Response) {
   setCorsHeaders(req, res);
 
@@ -109,9 +154,19 @@ async function handleMcpRequest(req: express.Request, res: express.Response) {
     return;
   }
 
-  // fl_mcp_ keys are checked by the worker. Anything else must be a Supabase
-  // OAuth access token, verified here and forwarded to the worker as-is.
-  if (!apiKey.startsWith('fl_mcp_') && !(await verifyOAuthAccessToken(apiKey))) {
+  // fl_mcp_ keys are checked against the worker (cached). Anything else must be a
+  // Supabase OAuth access token, verified here and forwarded to the worker as-is.
+  if (apiKey.startsWith('fl_mcp_')) {
+    const valid = await checkApiKey(apiKey);
+    if (valid === null) {
+      res.status(503).json({ error: 'Could not verify the API key right now. Try again shortly.' });
+      return;
+    }
+    if (!valid) {
+      sendUnauthorized(res, 'invalid_token');
+      return;
+    }
+  } else if (!(await verifyOAuthAccessToken(apiKey))) {
     sendUnauthorized(res, 'invalid_token');
     return;
   }
@@ -130,12 +185,11 @@ async function handleMcpRequest(req: express.Request, res: express.Response) {
       await server.close();
     };
 
-    res.once('close', () => {
-      void cleanup();
-    });
-    req.once('aborted', () => {
-      void cleanup();
-    });
+    const cleanupQuietly = () => {
+      cleanup().catch(error => console.error('MCP cleanup failed:', error));
+    };
+    res.once('close', cleanupQuietly);
+    req.once('aborted', cleanupQuietly);
 
     try {
       await server.connect(transport);
@@ -151,9 +205,9 @@ async function handleMcpRequest(req: express.Request, res: express.Response) {
 }
 
 export async function startHttp() {
-  const { HTTP_PORT } = getConfig();
+  const { HTTP_PORT, HOST } = getConfig();
   const app = express();
-  app.use(express.json());
+  app.use(express.json({ limit: '256kb' }));
 
   const sendResourceMetadata = (req: express.Request, res: express.Response) => {
     setCorsHeaders(req, res);
@@ -164,27 +218,29 @@ export async function startHttp() {
 
   app.options('/mcp', (req, res) => {
     setCorsHeaders(req, res);
-    res.setHeader('Allow', 'GET, POST, OPTIONS');
+    res.setHeader('Allow', 'POST, OPTIONS');
     res.status(204).end();
   });
 
-  app.get('/mcp', async (req, res) => {
-    const acceptsSse = req.headers.accept?.includes('text/event-stream');
-    if (!acceptsSse) {
-      setCorsHeaders(req, res);
-      res.setHeader('Allow', 'GET, POST, OPTIONS');
-      res.status(405).json({ error: 'GET /mcp requires Accept: text/event-stream or use POST for JSON-RPC requests.' });
-      return;
-    }
+  // Stateless server (no session ids): there is no server-to-client stream to
+  // open and no session to delete, so GET and DELETE are 405 per the Streamable
+  // HTTP spec. Serving GET used to open an SSE stream that never closed and kept a
+  // whole McpServer alive per connection.
+  const methodNotAllowed = (req: express.Request, res: express.Response) => {
+    setCorsHeaders(req, res);
+    res.setHeader('Allow', 'POST, OPTIONS');
+    res.status(405).json({ error: 'This server is stateless: send JSON-RPC requests with POST /mcp.' });
+  };
+  app.get('/mcp', methodNotAllowed);
+  app.delete('/mcp', methodNotAllowed);
 
+  app.post('/mcp', rateLimit, async (req, res) => {
     await handleMcpRequest(req, res);
   });
 
-  app.post('/mcp', async (req, res) => {
-    await handleMcpRequest(req, res);
-  });
-
-  app.listen(HTTP_PORT, () => {
-    console.error(`Fastlytics MCP server running on http://localhost:${HTTP_PORT}/mcp`);
+  // Loopback by default: cloudflared reaches the server on 127.0.0.1, and binding
+  // every interface exposed plain HTTP on the VPS that skipped Cloudflare.
+  app.listen(HTTP_PORT, HOST, () => {
+    console.error(`Fastlytics MCP server running on http://${HOST}:${HTTP_PORT}/mcp`);
   });
 }

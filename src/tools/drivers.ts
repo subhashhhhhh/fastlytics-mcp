@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { callWorkerApi } from '../lib/api-client.js';
+import { slugSegment } from '../lib/path.js';
 import { normalizeCacheSlug, normalizeSessionParam } from '../lib/cache-keys.js';
 
 export function registerDriverTools(server: McpServer) {
@@ -15,7 +16,7 @@ export function registerDriverTools(server: McpServer) {
       }),
     },
     async ({ driver_slug, season }) => {
-      const { data, error } = await callWorkerApi(`/api/driver/${driver_slug}/championship`, {
+      const { data, error } = await callWorkerApi(`/api/driver/${slugSegment(driver_slug, 'driver_slug')}/championship`, {
         season: String(season),
       });
 
@@ -40,7 +41,7 @@ export function registerDriverTools(server: McpServer) {
       }),
     },
     async ({ driver_slug }) => {
-      const { data, error } = await callWorkerApi(`/api/driver/${driver_slug}/teammates`);
+      const { data, error } = await callWorkerApi(`/api/driver/${slugSegment(driver_slug, 'driver_slug')}/teammates`);
 
       if (error || !data) {
         return {
@@ -63,7 +64,7 @@ export function registerDriverTools(server: McpServer) {
       }),
     },
     async ({ team_slug, season }) => {
-      const { data, error } = await callWorkerApi(`/api/team/${team_slug}/championship`, {
+      const { data, error } = await callWorkerApi(`/api/team/${slugSegment(team_slug, 'team_slug')}/championship`, {
         season: String(season),
       });
 

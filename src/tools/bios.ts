@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { callWorkerApi } from '../lib/api-client.js';
+import { choiceSegment, slugSegment } from '../lib/path.js';
 
 const LEADERBOARD_STATS = [
   'wins', 'points', 'podiums', 'poles', 'championships',
@@ -46,7 +47,7 @@ export function registerBiosTools(server: McpServer) {
       }),
     },
     async ({ driver_slug }) => {
-      const { data, error } = await callWorkerApi(`/api/driver/${driver_slug}/bio`);
+      const { data, error } = await callWorkerApi(`/api/driver/${slugSegment(driver_slug, 'driver_slug')}/bio`);
 
       if (error || !data) {
         return { content: [{ type: 'text', text: `No bio for ${driver_slug}: ${error}` }], isError: true };
@@ -66,7 +67,7 @@ export function registerBiosTools(server: McpServer) {
       }),
     },
     async ({ driver_slug }) => {
-      const { data, error } = await callWorkerApi(`/api/driver/${driver_slug}/career`);
+      const { data, error } = await callWorkerApi(`/api/driver/${slugSegment(driver_slug, 'driver_slug')}/career`);
 
       if (error || !data) {
         return { content: [{ type: 'text', text: `No career data for ${driver_slug}: ${error}` }], isError: true };
@@ -85,7 +86,7 @@ export function registerBiosTools(server: McpServer) {
       }),
     },
     async ({ team_slug }) => {
-      const { data, error } = await callWorkerApi(`/api/team/${team_slug}/bio`);
+      const { data, error } = await callWorkerApi(`/api/team/${slugSegment(team_slug, 'team_slug')}/bio`);
 
       if (error || !data) {
         return { content: [{ type: 'text', text: `No bio for ${team_slug}: ${error}` }], isError: true };
@@ -137,7 +138,8 @@ export function registerBiosTools(server: McpServer) {
       }),
     },
     async ({ type, stat, limit, min_races }) => {
-      const path = `/api/bios/leaderboard/${type}/${stat}`;
+      const statName = choiceSegment(stat, type === 'teams' ? TEAM_LEADERBOARD_STATS : LEADERBOARD_STATS, 'stat');
+      const path = `/api/bios/leaderboard/${type}/${statName}`;
       const params: Record<string, string> = { limit: String(limit) };
       if (min_races) params.min_races = String(min_races);
 

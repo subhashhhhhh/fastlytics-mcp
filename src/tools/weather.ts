@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod/v4';
 import { callWorkerApi } from '../lib/api-client.js';
+import { placeSegment } from '../lib/path.js';
 
 export function registerWeatherTools(server: McpServer) {
   server.registerTool(
@@ -41,7 +42,7 @@ export function registerWeatherTools(server: McpServer) {
       }),
     },
     async ({ location }) => {
-      const { data, error } = await callWorkerApi(`/api/weather/${encodeURIComponent(location)}`);
+      const { data, error } = await callWorkerApi(`/api/weather/${placeSegment(location, 'location')}`);
 
       if (error || !data) {
         return { content: [{ type: 'text', text: `Weather data unavailable for ${location}: ${error}` }], isError: true };

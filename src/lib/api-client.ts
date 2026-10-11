@@ -1,4 +1,6 @@
 import { getApiKey, getConfig } from './config.js';
+import { markApiKeyInvalid } from './key-check.js';
+import { assertSafeApiPath, InvalidArgumentError } from './path.js';
 
 async function readErrorDetail(resp: Response): Promise<string> {
   try {
@@ -14,13 +16,24 @@ async function readErrorDetail(resp: Response): Promise<string> {
   }
 }
 
-export async function callWorkerApi<T>(path: string, params?: Record<string, string>): Promise<{ data: T | null; status: number; error?: string }> {
+export async function callWorkerApi<T>(path: string, params?: Record<string, string | string[]>): Promise<{ data: T | null; status: number; error?: string }> {
+  try {
+    assertSafeApiPath(path);
+  } catch (e) {
+    return { data: null, status: 400, error: e instanceof InvalidArgumentError ? e.message : 'Invalid request path.' };
+  }
   const { FASTLYTICS_API_URL } = getConfig();
   const apiKey = getApiKey();
   const url = new URL(path, FASTLYTICS_API_URL);
   if (params) {
     for (const [key, value] of Object.entries(params)) {
-      url.searchParams.set(key, value);
+      // An array becomes a repeated parameter (drivers=HAM&drivers=VER), the form
+      // FastAPI reads as a list.
+      if (Array.isArray(value)) {
+        for (const item of value) url.searchParams.append(key, item);
+      } else {
+        url.searchParams.set(key, value);
+      }
     }
   }
 
@@ -32,6 +45,7 @@ export async function callWorkerApi<T>(path: string, params?: Record<string, str
     });
 
     if (resp.status === 401) {
+      markApiKeyInvalid(apiKey);
       const detail = await readErrorDetail(resp);
       return { data: null, status: 401, error: `Invalid or expired credentials. Check your FASTLYTICS_MCP_API_KEY, or reconnect to sign in again.${detail ? ` ${detail}` : ''}` };
     }

@@ -20,13 +20,16 @@ export function registerAnalysisTools(server: McpServer) {
     async ({ year, event, session, drivers }) => {
       const eventSlug = normalizeCacheSlug(event);
       const sessionUpper = normalizeSessionParam(session).toUpperCase();
-      const sortedDrivers = [...drivers].sort().join('_').toUpperCase();
+      const driverCodes = [...drivers].map(d => d.toUpperCase()).sort();
+      const sortedDrivers = driverCodes.join('_');
 
+      // The backend splits drivers on commas (the web app sends it that way too);
+      // "HAM_VER" reached it as one unknown driver.
       const { data, error } = await callWorkerApi('/api/telemetry/pace-distribution', {
         year: String(year),
         event,
         session: sessionUpper,
-        drivers: sortedDrivers,
+        drivers: driverCodes.join(','),
       });
 
       if (error || !data) {

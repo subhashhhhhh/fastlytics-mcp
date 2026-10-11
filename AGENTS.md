@@ -26,7 +26,8 @@ Required:
 Optional:
 - `FASTLYTICS_API_URL` — worker API URL (default: `https://fastlytics-api-proxy-v2.subhashgottumukkala17.workers.dev`)
 - `TRANSPORT` — `stdio` (default) or `http`
-- `HTTP_PORT` — default `3456`
+- `HTTP_PORT` — default `3456` (production: `48500`)
+- `HOST` — bind address, default `127.0.0.1` (cloudflared connects locally; don't bind `0.0.0.0`)
 
 ## Architecture
 
@@ -185,5 +186,7 @@ This builds locally, rsyncs `dist/` + `package.json`, installs deps, and restart
 
 ### Key flow (remote)
 
-Client sends `Authorization: Bearer fl_mcp_xxx` header → server extracts → sets `process.env` → `api-client.ts` uses it to call the worker. No env var needed on the server itself (the VPS env var is a fallback, not the primary source).
+Client sends `Authorization: Bearer fl_mcp_xxx` (or `X-API-Key` / `Api-Key`; query-string keys are not accepted) → `http.ts` checks the key against the worker (`lib/key-check.ts`, cached by SHA-256 for 5 min good / 1 min bad) or verifies the OAuth token → runs the request inside `runWithApiKey()` (`lib/request-context.ts`, AsyncLocalStorage), so each concurrent request carries its own key → `api-client.ts` reads it per call. HTTP mode never falls back to `FASTLYTICS_MCP_API_KEY`; that env var is for stdio only.
+
+The server is stateless: `GET`/`DELETE /mcp` return 405, `POST /mcp` is rate-limited per client IP (`CF-Connecting-IP`, trusted only from loopback). Tool arguments that go into URL paths must go through `lib/path.ts` (`slugSegment`, `placeSegment`, `choiceSegment`); `callWorkerApi` rejects any path with dot segments, `?`, `#` or encoded separators.
 

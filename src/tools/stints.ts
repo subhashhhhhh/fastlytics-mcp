@@ -49,13 +49,17 @@ export function registerStintTools(server: McpServer) {
     },
     async ({ year, event, session, drivers }) => {
       const sessionUpper = normalizeSessionParam(session).toUpperCase();
-      const sortedDrivers = [...drivers].sort().join('_').toUpperCase();
+      const driverCodes = [...drivers].map(d => d.toUpperCase()).sort();
+      const sortedDrivers = driverCodes.join('_');
 
+      // The backend reads drivers as a repeated parameter; the worker builds the same
+      // HAM_VER cache key from the repeated values. Sending "HAM_VER" as one value hit
+      // the cache but, on a miss, asked the backend for a single driver named HAM_VER.
       const { data, error } = await callWorkerApi('/api/laptimes/gaps', {
         year: String(year),
         event,
         session: sessionUpper,
-        drivers: sortedDrivers,
+        drivers: driverCodes,
       });
 
       if (error || !data) {
