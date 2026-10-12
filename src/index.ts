@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { runSetup } from './setup.js';
+import { flushSentry, initSentry, reportError } from './lib/sentry.js';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -12,6 +13,7 @@ async function main() {
 
   const { getConfig } = await import('./lib/config.js');
   const { TRANSPORT } = getConfig();
+  await initSentry();
 
   // Hosted HTTP mode accepts bearer keys per request, so only stdio/local
   // startup requires a preconfigured API key.
@@ -31,7 +33,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+main().catch(async (error) => {
   console.error('Fatal error:', error);
+  reportError(error);
+  await flushSentry();
   process.exit(1);
 });

@@ -4,6 +4,7 @@ import { createMcpServer } from '../server.js';
 import { getConfig } from '../lib/config.js';
 import { runWithApiKey } from '../lib/request-context.js';
 import { checkApiKey } from '../lib/key-check.js';
+import { reportError } from '../lib/sentry.js';
 import { protectedResourceMetadata, resourceMetadataUrl, verifyOAuthAccessToken } from '../lib/oauth.js';
 
 function setCorsHeaders(req: express.Request, res: express.Response) {
@@ -200,6 +201,7 @@ async function handleMcpRequest(req: express.Request, res: express.Response) {
         res.status(500).json({ error: 'Unable to process MCP request.' });
       }
       console.error('MCP request failed:', error);
+      reportError(error, { where: 'mcp-request' });
     }
   });
 }

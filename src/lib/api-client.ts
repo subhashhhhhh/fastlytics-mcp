@@ -1,6 +1,7 @@
 import { getApiKey, getConfig } from './config.js';
 import { markApiKeyInvalid } from './key-check.js';
 import { assertSafeApiPath, InvalidArgumentError } from './path.js';
+import { reportError } from './sentry.js';
 
 async function readErrorDetail(resp: Response): Promise<string> {
   try {
@@ -59,12 +60,18 @@ export async function callWorkerApi<T>(path: string, params?: Record<string, str
     }
     if (!resp.ok) {
       const detail = await readErrorDetail(resp);
+      // 4xx are the caller's problem (bad args, tier, missing data). 5xx means
+      // the worker or backend broke; report it with the path so the tool is obvious.
+      if (resp.status >= 500) {
+        reportError(new Error(`Worker API ${resp.status} on ${path}: ${detail || 'no detail'}`), { path, status: resp.status });
+      }
       return { data: null, status: resp.status, error: detail || `API error: ${resp.status}` };
     }
 
     const data = (await resp.json()) as T;
     return { data, status: resp.status };
   } catch (e) {
+    reportError(e, { path, status: 0 });
     return { data: null, status: 0, error: `Network error: ${e instanceof Error ? e.message : String(e)}` };
   }
 }
